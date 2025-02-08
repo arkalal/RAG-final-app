@@ -29,8 +29,8 @@ export async function POST(req) {
 
     // Create chat model
     const model = new ChatOpenAI({
-      modelName: "gpt-3.5-turbo",
-      temperature: 0.7,
+      modelName: "gpt-4o-2024-08-06",
+      temperature: 0.9,
     });
 
     // Create prompt template
@@ -40,7 +40,7 @@ export async function POST(req) {
       
       Question: {question}
       
-      Answer in a helpful and detailed way. If you cannot answer based on the context, say so.
+      Answer in a helpful and detailed way. If you cannot answer based on the context, say so. Always answer in brief and to the point.
     `);
 
     // Create chain
