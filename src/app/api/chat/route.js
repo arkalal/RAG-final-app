@@ -40,7 +40,7 @@ export async function POST(req) {
       
       Question: {question}
       
-      Answer in a helpful and detailed way. If you cannot answer based on the context, say so. Always answer in brief and to the point.
+      Answer in a helpful way. Smartly understand the query of the user and answer accordingly. Always answer in brief and to the point.
     `);
 
     // Create chain
