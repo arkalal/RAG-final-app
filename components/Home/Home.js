@@ -25,9 +25,14 @@ const Home = () => {
 
       if (!response.ok) throw new Error("Failed to clear data");
 
-      toast.success("Data cleared successfully");
-      setCurrentFile(null);
-      setNamespace(null);
+      const data = await response.json();
+      if (data.message === "Data cleared successfully") {
+        toast.success("Data cleared successfully");
+        setCurrentFile(null);
+        setNamespace(null);
+      } else {
+        throw new Error(data.error || "Failed to clear data");
+      }
     } catch (error) {
       console.error("Clear data error:", error);
       toast.error("Failed to clear data");

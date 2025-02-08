@@ -7,18 +7,25 @@ export async function POST(req) {
 
     const pinecone = new Pinecone({
       apiKey: process.env.PINECONE_API_KEY,
-      // environment: process.env.PINECONE_ENVIRONMENT,
     });
 
     const index = pinecone.Index(process.env.PINECONE_INDEX);
 
-    if (namespace) {
-      await index.deleteAll({ namespace });
-    } else {
-      await index.deleteAll();
-    }
+    try {
+      if (namespace) {
+        await index.namespace(namespace).deleteAll();
+      } else {
+        await index.deleteAll();
+      }
 
-    return NextResponse.json({ message: "Data cleared successfully" });
+      return NextResponse.json({ message: "Data cleared successfully" });
+    } catch (error) {
+      console.error("Pinecone delete error:", error);
+      return NextResponse.json(
+        { error: "Failed to clear data" },
+        { status: 500 }
+      );
+    }
   } catch (error) {
     console.error("Error clearing data:", error);
     return NextResponse.json({ error: "Error clearing data" }, { status: 500 });
