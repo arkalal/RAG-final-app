@@ -1,0 +1,23 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  // background-color: white;
+}
+
+html,
+body {
+  max-width: 100%;
+  overflow-x: hidden;
+  height: auto;
+}
+
+img,
+video {
+  max-width: 100%;
+  height: auto;
+}
