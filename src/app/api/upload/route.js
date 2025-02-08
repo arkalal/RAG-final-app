@@ -14,7 +14,7 @@ export async function POST(request) {
       return new Response("No file uploaded", { status: 400 });
     }
 
-    // Convert PDF to text using pdf2json
+    // Convert PDF to text
     const pdfParser = new PDFParser();
     const buffer = Buffer.from(await file.arrayBuffer());
 
@@ -35,23 +35,35 @@ export async function POST(request) {
     });
     const docs = await splitter.createDocuments([pdfText]);
 
-    // Initialize Pinecone
+    // Initialize Pinecone and create embeddings
     const pinecone = new Pinecone({
       apiKey: process.env.PINECONE_API_KEY,
       // environment: process.env.PINECONE_ENVIRONMENT,
     });
     const pineconeIndex = pinecone.Index(process.env.PINECONE_INDEX);
 
-    // Create embeddings and store in Pinecone
+    // Create and store embeddings with metadata
     const embeddings = new OpenAIEmbeddings();
     await PineconeStore.fromDocuments(docs, embeddings, {
       pineconeIndex,
-      namespace: file.name, // Using filename as namespace
+      namespace: file.name,
+      metadata: {
+        fileName: file.name,
+        timestamp: new Date().toISOString(),
+        chunkSize: 1000,
+        overlapSize: 200,
+      },
     });
 
-    return new Response("File uploaded successfully", { status: 200 });
+    return NextResponse.json({
+      message: "File processed successfully",
+      namespace: file.name,
+    });
   } catch (error) {
     console.error("Error in upload:", error);
-    return new Response("Error uploading file", { status: 500 });
+    return NextResponse.json(
+      { error: "Error processing file" },
+      { status: 500 }
+    );
   }
 }

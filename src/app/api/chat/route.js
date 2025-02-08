@@ -11,6 +11,12 @@ export async function POST(req) {
   try {
     const { message, namespace } = await req.json();
 
+    if (!namespace) {
+      return NextResponse.json({
+        response: "No document context available. Please upload a PDF first.",
+      });
+    }
+
     // Initialize Pinecone
     const pinecone = new Pinecone({
       apiKey: process.env.PINECONE_API_KEY,
@@ -18,14 +24,20 @@ export async function POST(req) {
     });
     const pineconeIndex = pinecone.Index(process.env.PINECONE_INDEX);
 
-    // Create vector store
+    // Get existing vector store
     const vectorStore = await PineconeStore.fromExistingIndex(
       new OpenAIEmbeddings(),
       { pineconeIndex, namespace }
     );
 
-    // Setup retriever
-    const retriever = vectorStore.asRetriever();
+    // Get relevant documents directly
+    const docs = await vectorStore.similaritySearch(message, 3);
+
+    if (!docs || docs.length === 0) {
+      return NextResponse.json({
+        response: "I don't have enough information to answer that question.",
+      });
+    }
 
     // Create chat model
     const model = new ChatOpenAI({
@@ -49,9 +61,6 @@ export async function POST(req) {
       prompt,
       outputParser: new StringOutputParser(),
     });
-
-    // Get relevant documents
-    const docs = await retriever.getRelevantDocuments(message);
 
     // Generate response
     const response = await chain.invoke({
