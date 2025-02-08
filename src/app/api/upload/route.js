@@ -5,13 +5,13 @@ import { PineconeStore } from "@langchain/pinecone";
 import { RecursiveCharacterTextSplitter } from "langchain/text_splitter";
 import PDFParser from "pdf2json";
 
-export async function POST(req) {
+export async function POST(request) {
   try {
-    const formData = await req.formData();
+    const formData = await request.formData();
     const file = formData.get("file");
 
     if (!file) {
-      return NextResponse.json({ error: "No file provided" }, { status: 400 });
+      return new Response("No file uploaded", { status: 400 });
     }
 
     // Convert PDF to text using pdf2json
@@ -49,15 +49,9 @@ export async function POST(req) {
       namespace: file.name, // Using filename as namespace
     });
 
-    return NextResponse.json({
-      message: "PDF processed successfully",
-      namespace: file.name,
-    });
+    return new Response("File uploaded successfully", { status: 200 });
   } catch (error) {
-    console.error("Error processing PDF:", error);
-    return NextResponse.json(
-      { error: "Error processing PDF" },
-      { status: 500 }
-    );
+    console.error("Error in upload:", error);
+    return new Response("Error uploading file", { status: 500 });
   }
 }

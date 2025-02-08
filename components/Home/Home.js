@@ -9,8 +9,10 @@ import styles from "./Home.module.scss";
 const Home = () => {
   const [currentFile, setCurrentFile] = useState(null);
   const [namespace, setNamespace] = useState(null);
+  const [isUploading, setIsUploading] = useState(false);
+  const [pdfUrl, setPdfUrl] = useState(null);
 
-  const handleUploadSuccess = (file, ns) => {
+  const handleUploadSuccess = async (file, ns) => {
     setCurrentFile(file);
     setNamespace(ns);
   };
@@ -30,6 +32,7 @@ const Home = () => {
         toast.success("Data cleared successfully");
         setCurrentFile(null);
         setNamespace(null);
+        setPdfUrl(null);
       } else {
         throw new Error(data.error || "Failed to clear data");
       }
@@ -39,18 +42,72 @@ const Home = () => {
     }
   };
 
+  const handleFileUpload = async (e) => {
+    const file = e.target.files[0];
+    if (file && file.type === "application/pdf") {
+      setIsUploading(true);
+      setCurrentFile(file);
+
+      const formData = new FormData();
+      formData.append("file", file);
+
+      try {
+        const response = await fetch("/api/upload", {
+          method: "POST",
+          body: formData,
+        });
+
+        if (response.ok) {
+          const objectUrl = URL.createObjectURL(file);
+          setPdfUrl(objectUrl);
+          setNamespace(file.name);
+          toast.success("PDF uploaded successfully!");
+        } else {
+          toast.error("Upload failed");
+        }
+      } catch (error) {
+        console.error("Error uploading file:", error);
+        toast.error("Error uploading file");
+      } finally {
+        setIsUploading(false);
+      }
+    }
+  };
+
   return (
     <div className={styles.home}>
       <div className={styles.pdfSection}>
-        <PDFUploader onUploadSuccess={handleUploadSuccess} />
-        {currentFile && (
-          <div className={styles.pdfPreview}>
-            <h3>{currentFile.name}</h3>
+        <div className={styles.pdfContainer}>
+          {isUploading ? (
+            <div className={styles.loaderContainer}>
+              <div className={styles.spinner}></div>
+              <p>Uploading PDF...</p>
+            </div>
+          ) : pdfUrl ? (
+            <embed
+              src={pdfUrl}
+              type="application/pdf"
+              className={styles.pdfEmbed}
+            />
+          ) : (
+            <div className={styles.uploadPrompt}>
+              <p>Upload a PDF to see preview</p>
+            </div>
+          )}
+        </div>
+        <div className={styles.controls}>
+          <input
+            type="file"
+            accept="application/pdf"
+            onChange={handleFileUpload}
+            className={styles.fileInput}
+          />
+          {currentFile && (
             <button onClick={handleClearData} className={styles.clearButton}>
               Clear Data
             </button>
-          </div>
-        )}
+          )}
+        </div>
       </div>
       <div className={styles.chatSection}>
         <Chat namespace={namespace} />
